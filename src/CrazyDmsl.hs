@@ -82,14 +82,14 @@ boolP = do
 
 s = (charP ',' >>)
 intSP = s intP
-boolSP = s boolSP
+boolSP = s boolP
 
 locP :: Parser Loc
 locP = do
   stringP "{X:"
-  x <- intSP
+  x <- intP
   stringP " Y:"
-  y <- intSP
+  y <- intP
   stringP "}"
   return (x, y)
 --  
@@ -147,10 +147,8 @@ shooterP = let sep = charP ',' in do
   shadowify' <- boolSP
   autoGCify' <- boolSP
   indefensiblify' <- boolSP
-  sep
-  shooterEvents' <- eventP /|\ charP '&'
-  sep
-  bulletEvents' <- eventP /|\ charP '&'
+  shooterEvents' <- s $ eventP -- eventP /|\ charP '&'
+  bulletEvents' <- s $ eventP -- eventP /|\ charP '&'
   locationX'' <- intSP
   locationY'' <- intSP
   radius'' <- intSP
@@ -220,8 +218,8 @@ shooterP = let sep = charP ',' in do
     }
 --
 
-eventP :: Parser Event
-eventP = undefined
+eventP :: Parser [Event]
+eventP = stringP "a" >> return [Event {}]
 
 crazyDmslP :: Parser String
 crazyDmslP = stringP "a"
