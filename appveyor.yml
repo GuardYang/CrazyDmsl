@@ -1,0 +1,17 @@
+build_script:
+  - cd src
+  - ghc Main.hs -O2
+  - move Main.exe ../Main.exe
+  - cd ..
+#
+
+before_build:
+  - choco install ghc
+  - refreshenv
+  - ghci --version
+#
+
+artifacts:
+  - path: Main.exe
+    name: Main
+#

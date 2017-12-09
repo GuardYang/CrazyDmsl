@@ -1,0 +1,7 @@
+## Backup ##
+
+*~
+*.exe
+*.o
+*.hi
+Main
