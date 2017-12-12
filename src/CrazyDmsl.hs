@@ -2,7 +2,6 @@
 
 module CrazyDmsl where
 
-import Control.Monad
 import Control.Applicative
 
 import Parsers
@@ -15,9 +14,15 @@ type DirR = (IntR, Loc)
 type Vect = (Int, Dir)
 type VectR = (IntR, DirR)
 
+data CondVar' = CurrentFrame | LocX | LocY deriving (Show, Eq)
+data Rela' = Bigger | Same | Smaller deriving (Show, Eq)
+data CondVar = CondVar CondVar' Rela' Int  deriving (Show, Eq)
+data Logic = And | Or deriving (Show, Eq)
+
 data Event = Event
-  {
-  } deriving (Show)
+  { condition1 :: CondVar
+  , condition2 :: Maybe (Logic, CondVar)
+  } deriving (Eq, Show)
 
 data Shooter = Shooter
   { shooterId :: Int
@@ -64,6 +69,7 @@ data Shooter = Shooter
   , influencedByField :: Bool
   , deepBind :: Bool
   } deriving (Show)
+--
 
 intP :: Parser Int
 intP = do
@@ -147,8 +153,8 @@ shooterP = let sep = charP ',' in do
   shadowify' <- boolSP
   autoGCify' <- boolSP
   indefensiblify' <- boolSP
-  shooterEvents' <- s $ eventP -- eventP /|\ charP '&'
-  bulletEvents' <- s $ eventP -- eventP /|\ charP '&'
+  shooterEvents' <- s $ eventP /|\ charP '&'
+  bulletEvents' <- s $ eventP /|\ charP '&'
   locationX'' <- intSP
   locationY'' <- intSP
   radius'' <- intSP
@@ -218,8 +224,30 @@ shooterP = let sep = charP ',' in do
     }
 --
 
-eventP :: Parser [Event]
-eventP = stringP "a" >> return [Event {}]
+condP :: Parser CondVar
+condP = do
+  var' <- "当前帧" ->> CurrentFrame
+         <|> "X座标" ->> LocX
+         <|> "Y座标" ->> LocY
+  rela' <- ">" ->> Bigger
+         <|> "=" ->> Same
+         <|> "<" ->> Smaller
+  int' <- intP
+  return $ CondVar var' rela' int'
+--
+
+eventP :: Parser Event
+eventP = do
+  cond1 <- condP
+  cond2 <- option0 Nothing $ do
+    a <- "且" ->> And <|> "或" ->> Or
+    c <- condP
+    return $ Just (a, c)
+  stringP "："
+  return Event
+    { condition1 = cond1
+    , condition2 = cond2
+    }
 
 crazyDmslP :: Parser String
 crazyDmslP = stringP "a"
